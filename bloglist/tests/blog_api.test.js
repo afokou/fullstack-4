@@ -68,6 +68,33 @@ describe('when there is initially some blogs saved', () => {
     assert.strictEqual(response.body.length, initialBlogs.length + 1)
   })
 
+  test('if likes property is missing, it defaults to 0', async () => {
+    const newBlog = {
+      title: 'Test blog',
+      author: 'Angeliki Fokou',
+      url: 'https://www.testblog.com/',
+    }
+
+    const response = await api
+      .post('/api/blogs')
+      .send(newBlog)
+      .expect(201)
+      .expect('Content-Type', /application\/json/)
+
+    assert.strictEqual(response.body.likes, 0)
+  })
+
+  test('if title and url properties are missing, return 400', async () => {
+    const newBlog = {
+      author: 'Angeliki Fokou',
+    }
+
+    await api
+      .post('/api/blogs')
+      .send(newBlog)
+      .expect(400)
+  })
+
   after(async () => {
     await mongoose.connection.close()
   })
