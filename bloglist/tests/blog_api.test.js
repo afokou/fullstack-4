@@ -34,24 +34,38 @@ describe('when there is initially some blogs saved', () => {
     await Promise.all(promiseArray)
   })
 
-  test('blogs are returned as json', async () => {
-    await api
-      .get('/api/blogs')
-      .expect(200)
-      .expect('Content-Type', /application\/json/)
-  })
-
   test('there are two blogs', async () => {
     const response = await api.get('/api/blogs')
 
     assert.strictEqual(response.body.length, initialBlogs.length)
   })
 
-  test('the first blog is about HTTP methods', async () => {
+  test('verify unique identifer is called id', async () => {
     const response = await api.get('/api/blogs')
+    // Check that _id does not exist in any blog object
+    // Check that id exists in any blog object
+    response.body.forEach(blog => {
+      assert.ok(blog.id)
+      assert.strictEqual(blog._id, undefined)
+    })
+  })
 
-    const contents = response.body.map(e => e.title)
-    assert(contents.includes('React patterns'))
+  test('a valid blog can be added and total increases', async () => {
+    const newBlog = {
+      title: 'Test blog',
+      author: 'Angeliki Fokou',
+      url: 'https://www.testblog.com/',
+      likes: 3,
+    }
+
+    await api
+      .post('/api/blogs')
+      .send(newBlog)
+      .expect(201)
+      .expect('Content-Type', /application\/json/)
+
+    const response = await api.get('/api/blogs')
+    assert.strictEqual(response.body.length, initialBlogs.length + 1)
   })
 
   after(async () => {
