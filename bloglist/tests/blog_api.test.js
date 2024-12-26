@@ -95,6 +95,41 @@ describe('when there is initially some blogs saved', () => {
       .expect(400)
   })
 
+  test('user can delete a blog', async () => {
+    const response = await api.get('/api/blogs')
+    const blogToDelete = response.body[0]
+
+    await api
+      .delete(`/api/blogs/${blogToDelete.id}`)
+      .expect(204)
+
+    const blogsAtEnd = await api.get('/api/blogs')
+    assert.strictEqual(blogsAtEnd.body.length, initialBlogs.length - 1)
+  })
+
+  test('user cant delete a blog with invalid id', async () => {
+    await api
+      .delete('/api/blogs/123')
+      .expect(400)
+  })
+
+  test('user can update the likes of a blog', async () => {
+    const response = await api.get('/api/blogs')
+    const blogToUpdate = response.body[0]
+
+    const updatedBlog = {
+      likes: 10,
+    }
+
+    await api
+      .put(`/api/blogs/${blogToUpdate.id}`)
+      .send(updatedBlog)
+      .expect(200)
+
+    const blogsAtEnd = await api.get('/api/blogs')
+    assert.strictEqual(blogsAtEnd.body[0].likes, 10)
+  })
+
   after(async () => {
     await mongoose.connection.close()
   })
