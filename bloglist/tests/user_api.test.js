@@ -7,7 +7,14 @@ const User = require('../models/user')
 
 const api = supertest(app)
 
-const initialUsers = [];
+const initialUsers = [
+  {
+    username: 'testuser',
+    name: 'Test User',
+    password: 'testpassword',
+    blogs: [],
+  },
+];
 
 describe('when there is initially some users saved', () => {
   beforeEach(async () => {
@@ -54,8 +61,8 @@ describe('when there is initially some users saved', () => {
 
   test('a user with duplicate username is not added', async () => {
     const newUser = {
-      username: 'testuser',
-      name: 'Test User',
+      username: 'afokou',
+      name: 'Angeliki Fikou',
       password: 'testpassword',
     }
 

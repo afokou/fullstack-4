@@ -4,21 +4,35 @@ const mongoose = require('mongoose')
 const supertest = require('supertest')
 const app = require('../app')
 const Blog = require('../models/blog')
+const User = require('../models/user')
 
 const api = supertest(app)
 
+const initialUsers = [
+  {
+    username: 'michaelchan',
+    name: 'Michael Chan',
+    password: 'testpassword',
+    blogs: [],
+  },
+  {
+    username: 'edsgerw.dijkstra',
+    name: 'Edsger W. Dijkstra',
+    password: 'testpassword',
+    blogs: [],
+  },
+]
+
 const initialBlogs = [
   {
-    id: "5a422a851b54a676234d17f7",
+    _id: "5a422a851b54a676234d17f7",
     title: "React patterns",
-    author: "Michael Chan",
     url: "https://reactpatterns.com/",
     likes: 7,
   },
   {
-    id: "5a422aa71b54a676234d17f8",
+    _id: "5a422aa71b54a676234d17f8",
     title: "Go To Statement Considered Harmful",
-    author: "Edsger W. Dijkstra",
     url: "http://www.u.arizona.edu/~rubinson/copyright_violations/Go_To_Considered_Harmful.html",
     likes: 5,
   },
@@ -27,11 +41,17 @@ const initialBlogs = [
 describe('when there is initially some blogs saved', () => {
   beforeEach(async () => {
     await Blog.deleteMany({})
+    await User.deleteMany({})
 
     const blogObjects = initialBlogs
       .map(blog => new Blog(blog))
     const promiseArray = blogObjects.map(blog => blog.save())
     await Promise.all(promiseArray)
+
+    const userObjects = initialUsers
+      .map(user => new User(user))
+    const promiseArray2 = userObjects.map(user => user.save())
+    await Promise.all(promiseArray2)
   })
 
   test('there are two blogs', async () => {
@@ -53,7 +73,6 @@ describe('when there is initially some blogs saved', () => {
   test('a valid blog can be added and total increases', async () => {
     const newBlog = {
       title: 'Test blog',
-      author: 'Angeliki Fokou',
       url: 'https://www.testblog.com/',
       likes: 3,
     }
