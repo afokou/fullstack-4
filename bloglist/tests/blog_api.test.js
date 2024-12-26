@@ -5,9 +5,11 @@ const supertest = require('supertest')
 const app = require('../app')
 const Blog = require('../models/blog')
 const User = require('../models/user')
+const bcrypt = require('bcrypt');
 
 const api = supertest(app)
 
+const saltRounds = 10
 const initialUsers = [
   {
     username: 'michaelchan',
@@ -48,7 +50,13 @@ describe('when there is initially some blogs saved', () => {
     const promiseArray = blogObjects.map(blog => blog.save())
     await Promise.all(promiseArray)
 
-    const userObjects = initialUsers
+    // Set passwordHash
+    const initialUsersWithHash = [];
+    for (let user of initialUsers) {
+      user.passwordHash = await bcrypt.hash(user.password, saltRounds)
+      initialUsersWithHash.push(user)
+    }
+    const userObjects = initialUsersWithHash
       .map(user => new User(user))
     const promiseArray2 = userObjects.map(user => user.save())
     await Promise.all(promiseArray2)
@@ -71,6 +79,14 @@ describe('when there is initially some blogs saved', () => {
   })
 
   test('a valid blog can be added and total increases', async () => {
+    // Login first
+    const loginResponse = await api
+      .post('/api/login')
+      .send({ username: 'michaelchan', password: 'testpassword' })
+      .expect(200)
+
+    const token = loginResponse.body.token
+
     const newBlog = {
       title: 'Test blog',
       url: 'https://www.testblog.com/',
@@ -79,6 +95,7 @@ describe('when there is initially some blogs saved', () => {
 
     await api
       .post('/api/blogs')
+      .set('Authorization', `Bearer ${token}`)
       .send(newBlog)
       .expect(201)
       .expect('Content-Type', /application\/json/)
@@ -88,6 +105,14 @@ describe('when there is initially some blogs saved', () => {
   })
 
   test('if likes property is missing, it defaults to 0', async () => {
+    // Login first
+    const loginResponse = await api
+      .post('/api/login')
+      .send({ username: 'michaelchan', password: 'testpassword' })
+      .expect(200)
+
+    const token = loginResponse.body.token
+
     const newBlog = {
       title: 'Test blog',
       author: 'Angeliki Fokou',
@@ -96,6 +121,7 @@ describe('when there is initially some blogs saved', () => {
 
     const response = await api
       .post('/api/blogs')
+      .set('Authorization', `Bearer ${token}`)
       .send(newBlog)
       .expect(201)
       .expect('Content-Type', /application\/json/)
@@ -104,12 +130,21 @@ describe('when there is initially some blogs saved', () => {
   })
 
   test('if title and url properties are missing, return 400', async () => {
+    // Login first
+    const loginResponse = await api
+      .post('/api/login')
+      .send({ username: 'michaelchan', password: 'testpassword' })
+      .expect(200)
+
+    const token = loginResponse.body.token
+
     const newBlog = {
       author: 'Angeliki Fokou',
     }
 
     await api
       .post('/api/blogs')
+      .set('Authorization', `Bearer ${token}`)
       .send(newBlog)
       .expect(400)
   })
