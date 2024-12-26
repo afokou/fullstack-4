@@ -60,6 +60,18 @@ describe('when there is initially some blogs saved', () => {
       .map(user => new User(user))
     const promiseArray2 = userObjects.map(user => user.save())
     await Promise.all(promiseArray2)
+
+    // Link all blogs to the first user
+    const user = await User.findOne({ username: 'michaelchan' })
+    const blogs = await Blog.find({})
+    user.blogs = blogs.map(blog => blog._id)
+    await user.save()
+
+    // For each blog set the author to the first user
+    for (let blog of blogs) {
+      blog.author = user._id
+      await blog.save()
+    }
   })
 
   test('there are two blogs', async () => {
@@ -150,11 +162,20 @@ describe('when there is initially some blogs saved', () => {
   })
 
   test('user can delete a blog', async () => {
+    // Login first
+    const loginResponse = await api
+      .post('/api/login')
+      .send({ username: 'michaelchan', password: 'testpassword' })
+      .expect(200)
+
+    const token = loginResponse.body.token
+
     const response = await api.get('/api/blogs')
     const blogToDelete = response.body[0]
 
     await api
       .delete(`/api/blogs/${blogToDelete.id}`)
+      .set('Authorization', `Bearer ${token}`)
       .expect(204)
 
     const blogsAtEnd = await api.get('/api/blogs')
