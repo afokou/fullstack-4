@@ -37,8 +37,8 @@ app.use("/api/login", loginRouter)
 // The course material mentions exposing this only in the test environment, but
 // I'm exposing it in all environments for the sake of simplicity.
 app.post('/reset', async (request, response) => {
-  User.deleteMany({})
-  Blog.deleteMany({})
+  await User.deleteMany({})
+  await Blog.deleteMany({})
   response.status(204).end()
 })
 
