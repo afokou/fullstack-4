@@ -15,6 +15,7 @@ blogsRouter.post('/', async (request, response) => {
     const user = await User
       .findById(request.user.id)
     user.blogs = user.blogs.concat(result._id)
+    await user.save()
     response.status(201).json(result)
   } catch (error) {
     if (error.name === 'ValidationError') {
